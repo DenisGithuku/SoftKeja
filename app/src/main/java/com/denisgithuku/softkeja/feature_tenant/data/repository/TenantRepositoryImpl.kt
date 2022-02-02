@@ -2,14 +2,12 @@ package com.denisgithuku.softkeja.feature_tenant.data.repository
 
 import com.denisgithuku.softkeja.feature_landlord.LandlordConstants
 import com.denisgithuku.softkeja.feature_landlord.domain.model.Home
-import com.denisgithuku.softkeja.feature_tenant.TenantsConstants
+import com.denisgithuku.softkeja.feature_tenant.domain.use_cases.util.TenantsConstants
 import com.denisgithuku.softkeja.feature_tenant.domain.model.Tenant
 import com.denisgithuku.softkeja.feature_tenant.domain.repository.TenantRepository
-import com.google.android.gms.tasks.Task
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -106,7 +104,7 @@ class TenantRepositoryImpl @Inject constructor(
     override suspend fun addToViewedHomes(home: Home): Boolean {
         return try {
             firebaseFirestore
-                .collection(TenantsConstants.viewHomes)
+                .collection(TenantsConstants.viewedHomes)
                 .document()
                 .set(home)
                 .await()
