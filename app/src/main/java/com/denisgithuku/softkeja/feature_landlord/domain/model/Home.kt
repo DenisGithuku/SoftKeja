@@ -21,21 +21,4 @@ data class Home(
             "Hearth"
         )
     }
-
-    fun fromHomeCategoryToString(homeCategory: HomeCategory): String? {
-        return try {
-            val home = homeCategory.toString()
-            home
-        }catch (e: Exception) {
-            null
-        }
-    }
-    fun fromStringToHomeCategory(homeStringCategory: String): HomeCategory? {
-        return try {
-            val home = HomeCategory.valueOf(homeStringCategory)
-            home
-        }catch (e: Exception) {
-            null
-        }
-    }
 }

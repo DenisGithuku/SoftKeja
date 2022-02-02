@@ -6,6 +6,5 @@ enum class HomeCategory {
     OneBedroom,
     TwoBedroom,
     ThreeBedroom,
-    TownHouse,
-    Villa
+    TownHouse
 }
