@@ -1,9 +1,11 @@
 package com.denisgithuku.softkeja.feature_landlord.domain.repository
 
+import android.net.Uri
 import com.denisgithuku.softkeja.feature_landlord.domain.model.Home
 import com.denisgithuku.softkeja.feature_landlord.domain.model.Landlord
 import com.denisgithuku.softkeja.feature_tenant.domain.model.Tenant
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.storage.StorageReference
 
 interface LandlordRepository {
 
@@ -15,7 +17,7 @@ interface LandlordRepository {
 
     suspend fun deleteLandlord(landlordId: String): Boolean
 
-    suspend fun addHome(home: Home): Boolean
+    suspend fun addHome(home: Home, photos: List<Uri>): Boolean
 
     suspend fun modifyHome(homeId: String, homeHashMap: HashMap<String, Any>): Boolean
 
@@ -23,5 +25,5 @@ interface LandlordRepository {
 
     suspend fun getHomeDetails(homeId: String): DocumentSnapshot?
 
-    suspend fun addHomePhotos(photos: List<String>): Boolean
+    suspend fun getHomePhotos(homeId: String): List<StorageReference>?
 }
