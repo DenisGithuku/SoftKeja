@@ -22,7 +22,7 @@ class TenantRepositoryImpl @Inject constructor(
         return try {
             firebaseFirestore
                 .collection(TenantsConstants.TenantCollection)
-                .document(tenant.idNo)
+                .document(tenant.id)
                 .set(tenant, SetOptions.merge())
                 .await()
             true
