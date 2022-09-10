@@ -26,7 +26,7 @@ fun MapUi(
         uiState.latLng.substringAfter(" ").toDouble()
     )
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(pos, 15f)
+        position = CameraPosition.fromLatLngZoom(pos, 6f)
     }
 
     var uiSettings by remember { mutableStateOf(MapUiSettings(myLocationButtonEnabled = true)) }

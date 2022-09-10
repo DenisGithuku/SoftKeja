@@ -32,21 +32,26 @@ fun BookMarksUi(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    if (uiState.isLoading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    }
 
-    if (uiState.error.isNotEmpty()) {
-        LaunchedEffect(scaffoldState.snackbarHostState) {
-            scope.launch {
-                scaffoldState.snackbarHostState.showSnackbar(uiState.error)
-            }
-        }
-    }
 
     Column(modifier = Modifier.fillMaxSize()) {
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return@Column
+        }
+
+        if (uiState.userMessages.isNotEmpty()) {
+            for (userMessage in uiState.userMessages) {
+                LaunchedEffect(scaffoldState.snackbarHostState) {
+                    scope.launch {
+                        scaffoldState.snackbarHostState.showSnackbar(message = userMessage.message?.message ?: "Could not fetch bookmarks")
+                    }
+                }
+            }
+            return@Column
+        }
         Text(
             text = "All Bookmarks", modifier = Modifier
                 .fillMaxWidth()
@@ -54,10 +59,12 @@ fun BookMarksUi(
         )
 
         LazyColumn(state = listState) {
-            items(uiState.bookmarks) { home ->
-                HomeItem(home = home, onSelectHome = {
-                    onOpenHome(it)
-                })
+            uiState.bookmarks.forEach {home ->
+                item(key = home.homeId) {
+                    HomeItem(home = home, onSelectHome = {
+                        onOpenHome(it)
+                    })
+                }
             }
         }
 

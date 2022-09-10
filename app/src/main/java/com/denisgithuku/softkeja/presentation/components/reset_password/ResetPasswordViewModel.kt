@@ -2,7 +2,9 @@ package com.denisgithuku.softkeja.presentation.components.reset_password
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.denisgithuku.softkeja.common.util.UserMessage
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -35,6 +37,7 @@ class ResetPasswordViewModel @Inject constructor(
                         }
                         auth.sendPasswordResetEmail(_uiState.value.email)
                             .addOnCompleteListener { task ->
+                                _uiState.value.clearUserMessages()
                                 if (task.isSuccessful) {
                                     _uiState.update {
                                         it.copy(
@@ -47,27 +50,44 @@ class ResetPasswordViewModel @Inject constructor(
                                         it.copy(
                                             isLoading = false,
                                             passwordResetEmailSent = false,
-                                            error = task.exception?.message.toString()
+                                        )
+                                    }.also {
+                                        _uiState.value.addUserMessage(
+                                            UserMessage(message = task.exception)
                                         )
                                     }
                                 }
                             }
                     }
                 }catch (e: Exception) {
+                    _uiState.value.clearUserMessages()
                     when (e) {
                         is FirebaseAuthInvalidUserException -> {
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    error = "No such user found. Have you created an account?"
                                 )
+                            }.also {
+                                _uiState.value.addUserMessage(UserMessage(message = e))
+                            }
+                        }
+                        is FirebaseTooManyRequestsException -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                )
+                            }.also {
+                                _uiState.value.addUserMessage(UserMessage(message = e))
                             }
                         }
                         is FirebaseAuthInvalidCredentialsException -> {
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    error = "Could not authenticate. Make sure to provide the correct details."
+                                )
+                            }.also {
+                                _uiState.value.addUserMessage(
+                                    UserMessage(e)
                                 )
                             }
                         }
@@ -75,7 +95,10 @@ class ResetPasswordViewModel @Inject constructor(
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    error = "Could not login. Please check your internet connection"
+                                )
+                            }.also {
+                                _uiState.value.addUserMessage(
+                                    UserMessage(e)
                                 )
                             }
                         }
@@ -83,7 +106,10 @@ class ResetPasswordViewModel @Inject constructor(
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    error = e.message.toString()
+                                )
+                            }.also {
+                                _uiState.value.addUserMessage(
+                                    UserMessage(e)
                                 )
                             }
                         }

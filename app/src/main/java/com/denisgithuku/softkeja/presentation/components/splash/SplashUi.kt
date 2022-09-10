@@ -1,5 +1,6 @@
 package com.denisgithuku.softkeja.presentation.components.splash
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import com.denisgithuku.softkeja.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SplashUi(
     onSplashScreenShow: () -> Unit
@@ -29,18 +31,23 @@ fun SplashUi(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            modifier = Modifier
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colors.primary,
-                    shape = CircleShape
-                )
-                .size(200.dp),
-            contentScale = ContentScale.Crop,
-            painter = painterResource(id = R.drawable.ic_app_logo),
-            contentDescription = "App icon"
-        )
+        AnimatedContent(
+            targetState = true,
+        ) {
+            Image(
+                modifier = Modifier
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colors.primary,
+                        shape = CircleShape
+                    )
+                    .size(200.dp)
+                ,
+                contentScale = ContentScale.Crop,
+                painter = painterResource(id = R.drawable.ic_app_logo),
+                contentDescription = "App icon"
+            )
+        }
     }
 
     LaunchedEffect(true) {

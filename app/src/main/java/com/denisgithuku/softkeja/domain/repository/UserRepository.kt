@@ -13,4 +13,6 @@ interface UserRepository {
     suspend fun updateUser(userId: String, userHashMap: HashMap<String, Any>): Flow<Resource<Boolean>>
 
     suspend fun deleteUser(userId: String): Flow<Resource<Boolean>>
+
+    suspend fun logout()
 }

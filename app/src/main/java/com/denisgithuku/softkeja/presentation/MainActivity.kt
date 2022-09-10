@@ -40,7 +40,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         auth = Firebase.auth
         setContent {
-
             SoftKejaTheme {
                 val screens = listOf(
                     Screen.Home,

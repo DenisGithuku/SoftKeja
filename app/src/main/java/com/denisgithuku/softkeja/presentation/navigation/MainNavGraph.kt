@@ -45,6 +45,8 @@ fun MainNavGraph(
                         popUpTo(Screen.Splash.route) {
                             inclusive = true
                         }
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 }
             })
@@ -55,6 +57,7 @@ fun MainNavGraph(
                     popUpTo(Screen.Login.route) {
                         inclusive = false
                     }
+                    launchSingleTop = true
                 }
             }, onSignUpInstead = {
                 navController.navigate(Screen.SignUp.route) {
@@ -92,9 +95,9 @@ fun MainNavGraph(
                 },
                 scaffoldState = scaffoldState,
                 sheetState = sheetState,
-                onNavigateToAbout = {
-                    navController.navigate(Screen.About.route) {
-                        popUpTo(Screen.About.route) {
+                onNavigateToProfile = { userId ->
+                    navController.navigate(Screen.Profile.route + "/${userId}") {
+                        popUpTo(Screen.Profile.route) {
                             inclusive = true
                         }
                         restoreState = true
@@ -150,8 +153,18 @@ fun MainNavGraph(
             MapUi(scaffoldState = scaffoldState)
         }
 
-        composable(Screen.Profile.route) {
-            ProfileUi()
+        composable(Screen.Profile.route + "/{userId}") {
+            ProfileUi(scaffoldState = scaffoldState, onSignOut = {
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(Screen.Profile.route) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                    restoreState = false
+                }
+            }, onNavigateUp = {
+                navController.popBackStack()
+            })
         }
 
     }

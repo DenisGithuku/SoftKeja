@@ -2,7 +2,9 @@ package com.denisgithuku.softkeja.presentation.components.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.denisgithuku.softkeja.common.util.UserMessage
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,57 +75,75 @@ class LoginViewModel @Inject constructor(
                             isLoading = true
                         )
                     }
-
-                    auth.signInWithEmailAndPassword(uiState.value.email, uiState.value.password).await()
-                    if (auth.currentUser?.isEmailVerified == true) {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                loggedIn = true
-                            )
-                        }
-                    } else {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                loggedIn = false,
-                                error = "Email not verified"
-                            )
+                    val user = auth.signInWithEmailAndPassword(uiState.value.email, uiState.value.password).await().user
+                    user?.let {
+                        if (it.isEmailVerified) {
+                            _uiState.update { loginUiState ->
+                                loginUiState.copy(
+                                    isLoading = false,
+                                    loggedIn = true
+                                )
+                            }
+                        } else {
+                            _uiState.update { loginUiState ->
+                                loginUiState.copy(
+                                    isLoading = false,
+                                    loggedIn = false,
+                                )
+                            }.also {
+                                _uiState.value.addUserMessage(
+                                    UserMessage(message = Throwable(message = "Email not verified."))
+                                )
+                            }
                         }
                     }
 
                 } catch (e: Exception) {
+                    _uiState.value.clearUserMessages()
                     when (e) {
                         is FirebaseAuthInvalidUserException -> {
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    error = "No such user found. Have you created an account?"
                                 )
+                            }.also {
+                                _uiState.value.addUserMessage(UserMessage(e))
+                            }
+                        }
+                        is FirebaseTooManyRequestsException -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                )
+                            }.also {
+                                _uiState.value.addUserMessage(UserMessage(message = e))
                             }
                         }
                         is FirebaseAuthInvalidCredentialsException -> {
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    error = "Could not authenticate. Make sure to provide the correct details."
                                 )
+                            }.also {
+                                _uiState.value.addUserMessage(UserMessage(e))
                             }
                         }
                         is FirebaseNetworkException -> {
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    error = "Could not login. Please check your internet connection"
                                 )
+                            }.also {
+                                _uiState.value.addUserMessage(UserMessage(e))
                             }
                         }
                         else -> {
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    error = e.message.toString()
                                 )
+                            }.also {
+                                _uiState.value.addUserMessage(UserMessage(e))
                             }
                         }
                     }

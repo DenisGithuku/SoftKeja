@@ -5,7 +5,8 @@ data class User(
     var firstname: String = "",
     var lastname: String = "",
     var email: String = "",
-    var isPremium: Boolean = false
+    var isPremium: Boolean = false,
+    var bookMarks: List<String> = emptyList()
 )
 
 val User.canSaveToFavourites: Boolean get() = isPremium

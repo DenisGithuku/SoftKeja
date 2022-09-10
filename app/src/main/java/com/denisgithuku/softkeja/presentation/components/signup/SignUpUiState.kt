@@ -1,5 +1,6 @@
 package com.denisgithuku.softkeja.presentation.components.signup
 
+import com.denisgithuku.softkeja.common.util.UserMessage
 import com.denisgithuku.softkeja.presentation.components.reset_password.PasswordRequirement
 
 data class SignUpState(
@@ -13,8 +14,16 @@ data class SignUpState(
     val confirmPassword: String = "",
     val passwordRequirements: List<PasswordRequirement> = listOf(),
     val signUpSuccess: Boolean = false,
-    val error: String = ""
-)
+    val userMessages: MutableList<UserMessage> = mutableListOf()
+) {
+    fun addUserMessage(userMessage: UserMessage) {
+        userMessages.add(userMessage)
+    }
+
+    fun clearUserMessages() {
+        userMessages.clear()
+    }
+}
 
 val SignUpState.formIsValid: Boolean
     get() = firstname.isNotEmpty()

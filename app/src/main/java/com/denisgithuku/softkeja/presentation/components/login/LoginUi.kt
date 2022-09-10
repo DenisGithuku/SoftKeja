@@ -13,9 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -69,9 +73,11 @@ fun LoginScreen(
         }
     }
 
-    if (uiState.error.isNotEmpty()) {
-        LaunchedEffect(scaffoldState.snackbarHostState) {
-                scaffoldState.snackbarHostState.showSnackbar(uiState.error)
+    if (uiState.userMessages.isNotEmpty()) {
+        for (userMessage in uiState.userMessages) {
+            LaunchedEffect(scaffoldState.snackbarHostState) {
+                scaffoldState.snackbarHostState.showSnackbar(userMessage.message?.localizedMessage.toString())
+            }
         }
     }
 
@@ -80,6 +86,16 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            text = "Welcome back",
+            style = TextStyle(
+                fontSize = 25.sp,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black.copy(alpha = 0.8f)
+            )
+        )
+        Spacer(modifier = Modifier.height(30.dp))
         TextField(
             value = uiState.email,
             onValueChange = {
@@ -125,7 +141,6 @@ fun LoginScreen(
                 IconButton(onClick = {
                     loginViewModel.onEvent(LoginUiEvent.TogglePasswordVisibility)
                 }) {
-
                     if (uiState.passwordVisible == PasswordVisibilityMode.VISIBLE) Icon(
                         imageVector = Icons.Default.VisibilityOff,
                         contentDescription = null
@@ -155,7 +170,9 @@ fun LoginScreen(
                             onLoggedIn()
                         } else {
                             scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(uiState.error)
+                                for (userMessage in uiState.userMessages) {
+                                    scaffoldState.snackbarHostState.showSnackbar(userMessage.message.toString())
+                                }
                             }
                         }
                     } else {
@@ -177,26 +194,25 @@ fun LoginScreen(
         Button(
             shape = MaterialTheme.shapes.medium,
             onClick = {
-            if (uiState.formValid) {
-                showDialog = !showDialog
-                loginViewModel.onEvent(LoginUiEvent.Login).also {
-                    if (uiState.loggedIn) {
-                        showDialog = !showDialog
-                        showDialog = false
-                        onLoggedIn()
-                    }
-                    if(uiState.error.isNotEmpty()) {
-                        scope.launch {
-                            scaffoldState.snackbarHostState.showSnackbar(uiState.error)
+                if (uiState.formValid) {
+                    showDialog = !showDialog
+                    loginViewModel.onEvent(LoginUiEvent.Login)
+                    if (uiState.userMessages.isNotEmpty()) {
+                        uiState.userMessages.forEach { userMessage ->
+                            scope.launch {
+                                scaffoldState.snackbarHostState.showSnackbar(userMessage.message.toString())
+                            }
                         }
                     }
+                    showDialog = !showDialog
+                    showDialog = false
+                    onLoggedIn()
+                } else {
+                    scope.launch {
+                        scaffoldState.snackbarHostState.showSnackbar("Invalid form details. Check for any missing details")
+                    }
                 }
-            } else {
-                scope.launch {
-                    scaffoldState.snackbarHostState.showSnackbar("Invalid form details. Check for any missing details")
-                }
-            }
-        }) {
+            }) {
             Text(text = "Login")
         }
         SignUpInsteadSection(
@@ -232,6 +248,7 @@ fun SignUpInsteadSection(
 }
 
 @Preview(showBackground = true)
-@Composable fun SignUpInsteadPrev() {
-    SignUpInsteadSection (onSignUpInstead = {}, onForgotPassword = {})
+@Composable
+fun SignUpInsteadPrev() {
+    SignUpInsteadSection(onSignUpInstead = {}, onForgotPassword = {})
 }

@@ -10,8 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -60,9 +64,11 @@ fun ResetPasswordScreen(
         }
     }
 
-    if (uiState.error.isNotEmpty()) {
-        LaunchedEffect(scaffoldState.snackbarHostState) {
-            scaffoldState.snackbarHostState.showSnackbar(uiState.error)
+    if (uiState.userMessages.isNotEmpty()) {
+        for (userMessage in uiState.userMessages) {
+            LaunchedEffect(scaffoldState.snackbarHostState) {
+                scaffoldState.snackbarHostState.showSnackbar(userMessage.message.toString())
+            }
         }
     }
 
@@ -71,6 +77,11 @@ fun ResetPasswordScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            text = "Request for a change of password",
+            style = TextStyle(fontSize = 25.sp, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold, color = Color.Black.copy(alpha = 0.8f))
+        )
+        Spacer(modifier = Modifier.height(30.dp))
         TextField(
             value = uiState.email,
             onValueChange = { resetPasswordViewModel.onEvent(ResetPasswordEvent.EmailChange(it)) },
@@ -111,10 +122,12 @@ fun ResetPasswordScreen(
                                 }
                                 onResetPassword()
                             }
-                            if (uiState.error.isNotEmpty()) {
-                                showDialog = !showDialog
-                                scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar(uiState.error)
+                            if (uiState.userMessages.isNotEmpty()) {
+                                for (userMessage in uiState.userMessages) {
+                                    showDialog = !showDialog
+                                    scope.launch {
+                                        scaffoldState.snackbarHostState.showSnackbar(userMessage.message.toString())
+                                    }
                                 }
                             }
                         }

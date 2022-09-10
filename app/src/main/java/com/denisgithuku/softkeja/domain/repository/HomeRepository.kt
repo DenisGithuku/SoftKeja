@@ -16,8 +16,8 @@ interface HomeRepository {
 
     suspend fun getHomeImageUrl(homeImageRef: String): Flow<Resource<String>>
 
-    suspend fun addHomeToBookMarks(home: Home): Flow<Resource<Boolean>>
+    suspend fun addHomeToBookMarks(userId: String, home: Home): Flow<Resource<Boolean>>
 
-    suspend fun getBookmarkedHomes(): Flow<Resource<List<Home>>>
+    suspend fun getBookmarkedHomes(): Flow<List<Home>>
 
 }

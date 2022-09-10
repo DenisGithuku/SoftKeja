@@ -1,10 +1,10 @@
-
-
 package com.denisgithuku.softkeja.data.repository
 
+import android.util.Log
 import com.denisgithuku.softkeja.common.Constants.bookMarksCollection
 import com.denisgithuku.softkeja.common.Constants.homeCategoryCollection
 import com.denisgithuku.softkeja.common.Constants.homeCollection
+import com.denisgithuku.softkeja.common.Constants.userCollection
 import com.denisgithuku.softkeja.common.Resource
 import com.denisgithuku.softkeja.domain.model.Home
 import com.denisgithuku.softkeja.domain.model.HomeCategory
@@ -33,7 +33,7 @@ class HomeRepositoryImpl @Inject constructor(
             .whereEqualTo("category", category)
             .addSnapshotListener { value, error ->
                 if (error != null) {
-                    trySend(Resource.Error(error.message.toString()))
+                    trySend(Resource.Error(error))
                 }
                 val homes = value?.documents?.mapNotNull {
                     it.toObject(Home::class.java).also { home ->
@@ -57,7 +57,7 @@ class HomeRepositoryImpl @Inject constructor(
         val listenerRegistration = firestore.collection(homeCategoryCollection)
             .addSnapshotListener { value, error ->
                 if (error != null) {
-                    trySend(Resource.Error(error.message.toString()))
+                    trySend(Resource.Error(error))
                     return@addSnapshotListener
                 }
                 val homeCategories = value?.documents?.mapNotNull {
@@ -79,7 +79,7 @@ class HomeRepositoryImpl @Inject constructor(
             .addSnapshotListener { value, error ->
                 if (error != null) {
                     cancel(cause = error, message = error.message.toString())
-                    trySend(Resource.Error(error.message.toString()))
+                    trySend(Resource.Error(error))
                     return@addSnapshotListener
                 }
 
@@ -106,7 +106,7 @@ class HomeRepositoryImpl @Inject constructor(
                     trySend(Resource.Success(imageUri.toString()))
                 }
                 .addOnFailureListener {
-                    trySend(Resource.Error(it.message.toString()))
+                    trySend(Resource.Error(it))
                 }
             awaitClose {
                 close()
@@ -114,48 +114,46 @@ class HomeRepositoryImpl @Inject constructor(
 
         }
 
-    override suspend fun addHomeToBookMarks(home: Home): Flow<Resource<Boolean>> = callbackFlow {
-        try {
-            trySend(Resource.Loading())
-            firestore.collection(bookMarksCollection)
-                .document(home.homeId)
-                .set(home)
-                .await()
-            trySend(Resource.Success(true))
-            awaitClose {
+    override suspend fun addHomeToBookMarks(userId: String, home: Home): Flow<Resource<Boolean>> =
+        callbackFlow {
+            try {
+                trySend(Resource.Loading())
+                firestore.collection(bookMarksCollection)
+                    .document(home.homeId)
+                    .set(home)
+                    .await()
                 close()
+                trySend(Resource.Success(true))
+            } catch (e: Exception) {
+                trySend(Resource.Error(e))
             }
-        } catch (e: Exception) {
-            trySend(Resource.Error(e.message.toString()))
         }
-    }
 
-    override suspend fun getBookmarkedHomes(): Flow<Resource<List<Home>>> = callbackFlow {
-        trySend(Resource.Loading())
-        val listenerRegistration = firestore.collection(bookMarksCollection)
-            .addSnapshotListener { value, error ->
-                if (error != null) {
-                    cancel(cause = error, message = error.message.toString())
-                    trySend(Resource.Error(error.message.toString()))
-                    return@addSnapshotListener
-                }
-                val homes = value?.documents?.mapNotNull {
-                    it.toObject(Home::class.java).also { home ->
-                        home?.features?.map {
-                            value.documents.map { doc ->
-                                doc.toObject(Home::class.java)?.features as List<Map<String, String>>
+    override suspend fun getBookmarkedHomes(): Flow<List<Home>> = callbackFlow {
+            val listenerRegistration =
+                firestore.collection(bookMarksCollection)
+                    .addSnapshotListener { value, error ->
+                        if (error != null) {
+                            cancel(cause = error, message = error.message.toString())
+                            return@addSnapshotListener
+                        }
+                        val homes = value?.documents?.mapNotNull {
+                            it.toObject(Home::class.java).also { home ->
+                                home?.features?.map {
+                                    value.documents.map { doc ->
+                                        doc.toObject(Home::class.java)?.features as List<Map<String, String>>
+                                    }
+                                }
                             }
                         }
+                        trySend(homes ?: emptyList())
                     }
-                }
-                trySend(Resource.Success(homes!!))
-            }
 
-        awaitClose {
-            listenerRegistration.remove()
-            close()
+            awaitClose {
+                listenerRegistration.remove()
+                close()
+            }
         }
-    }
 
 
 }

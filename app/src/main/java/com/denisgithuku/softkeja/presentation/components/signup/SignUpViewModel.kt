@@ -3,9 +3,11 @@ package com.denisgithuku.softkeja.presentation.components.signup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denisgithuku.softkeja.common.Resource
+import com.denisgithuku.softkeja.common.util.UserMessage
 import com.denisgithuku.softkeja.domain.model.User
 import com.denisgithuku.softkeja.domain.repository.UserRepository
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthEmailException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -68,6 +70,7 @@ class SignUpViewModel @Inject constructor(
                         )
                         viewModelScope.launch {
                             userRepository.createUser(user).collect { result ->
+                                _uiState.value.clearUserMessages()
                                 when (result) {
                                     is Resource.Loading -> {
                                         _uiState.update {
@@ -89,48 +92,47 @@ class SignUpViewModel @Inject constructor(
                                         _uiState.update {
                                             it.copy(
                                                 isLoading = false,
-                                                error = result.error
                                             )
+                                        }.also {
+                                            _uiState.value.addUserMessage(UserMessage(message = result.error))
                                         }
                                     }
+
                                 }
                             }
                         }
                     } else {
-                        _uiState.update {
-                            it.copy(error = authResult.exception?.message.toString())
-                        }
+                        _uiState.value.addUserMessage(UserMessage(message = authResult.exception))
                     }
                 }
         } catch (e: Exception) {
             when (e) {
+                is FirebaseTooManyRequestsException -> {
+                    _uiState.value.addUserMessage(
+                        UserMessage(message = e)
+                    )
+                }
                 is FirebaseAuthUserCollisionException -> {
-                    _uiState.update {
-                        it.copy(
-                            error = "User already exists"
-                        )
-                    }
+                    _uiState.value.addUserMessage(
+                        UserMessage(message = e)
+                    )
                 }
                 is FirebaseAuthWeakPasswordException -> {
-                    _uiState.update {
-                        it.copy(
-                            error = "Password should not be less than 6 characters"
-                        )
-                    }
+                    _uiState.value.addUserMessage(
+                        UserMessage(e)
+                    )
                 }
                 is FirebaseNetworkException -> {
-                    _uiState.update {
-                        it.copy(
-                            error = "Could not register. Please check your internet connection."
+                    _uiState.value.addUserMessage(
+                        UserMessage(
+                            e
                         )
-                    }
+                    )
                 }
                 else -> {
-                    _uiState.update {
-                        it.copy(
-                            error = e.message.toString()
-                        )
-                    }
+                    _uiState.value.addUserMessage(
+                        UserMessage(e)
+                    )
                 }
             }
         }

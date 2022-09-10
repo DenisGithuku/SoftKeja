@@ -4,13 +4,13 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denisgithuku.softkeja.common.Resource
+import com.denisgithuku.softkeja.common.util.UserMessage
 import com.denisgithuku.softkeja.domain.repository.HomeRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,6 +27,7 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> get() = _uiState
 
     init {
+        getTimeOfDay()
         fetchUser()
         fetchHomeCategories()
     }
@@ -48,6 +49,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             withTimeout(5000L) {
                 homeRepository.getAllHomeCategories().collect { result ->
+                    _uiState.value.clearUserMessages()
                     when (result) {
                         is Resource.Loading -> {
                             _uiState.update {
@@ -66,10 +68,9 @@ class HomeViewModel @Inject constructor(
                         }
                         is Resource.Error -> {
                             _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    error = result.error
-                                )
+                                it.copy(isLoading = false)
+                            }.also {
+                                _uiState.value.addToUserMessage(UserMessage(message = result.error))
                             }
                         }
                     }
@@ -80,32 +81,35 @@ class HomeViewModel @Inject constructor(
 
     private fun fetchHomes(category: String) {
         viewModelScope.launch {
-            homeRepository.getAllHomes(category).collect { result ->
-                when (result) {
-                    is Resource.Loading -> {
-                        _uiState.update {
-                            it.copy(isLoading = true)
+            withTimeout(1000) {
+                homeRepository.getAllHomes(category).collect { result ->
+                    when (result) {
+                        is Resource.Loading -> {
+                            _uiState.update {
+                                it.copy(isLoading = true)
+                            }
                         }
-                    }
-                    is Resource.Success -> {
-                        result.data?.forEach {
-                            fetchHomeImageUrl(it.imageUrl)
-                        }
-                        _uiState.update {
-                            it.copy(
-                                homes = result.data ?: listOf(),
-                                isLoading = false
-                            )
-                        }
-                        Log.d("homes", result.data.toString())
+                        is Resource.Success -> {
+                            result.data?.forEach {
+                                fetchHomeImageUrl(it.imageUrl)
+                            }
+                            _uiState.update {
+                                it.copy(
+                                    homes = result.data ?: listOf(),
+                                    isLoading = false
+                                )
+                            }
+                            Log.d("homes", result.data.toString())
 
-                    }
-                    is Resource.Error -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = result.error
-                            )
+                        }
+                        is Resource.Error -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                )
+                            }.also {
+                                _uiState.value.addToUserMessage(UserMessage(message = result.error))
+                            }
                         }
                     }
                 }
@@ -132,13 +136,19 @@ class HomeViewModel @Inject constructor(
                     }
                     is Resource.Error -> {
                         _uiState.update {
-                            it.copy(isLoading = false, error = result.error)
+                            it.copy(isLoading = false)
+                        }.also {
+                            _uiState.value.addToUserMessage(UserMessage(message = result.error))
                         }
                     }
                 }
 
             }
         }
+    }
+
+    private fun getTimeOfDay() {
+
     }
 
     fun onEvent(event: HomeUiEvent) {

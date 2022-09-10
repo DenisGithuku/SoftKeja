@@ -6,6 +6,7 @@ import com.denisgithuku.softkeja.common.Constants
 import com.denisgithuku.softkeja.common.Resource
 import com.denisgithuku.softkeja.domain.model.User
 import com.denisgithuku.softkeja.domain.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +20,8 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val firebaseAuth: FirebaseAuth
 ): UserRepository {
     override suspend fun createUser(user: User): Flow<Resource<Boolean>> = callbackFlow {
             trySend(Resource.Loading())
@@ -41,7 +43,7 @@ class UserRepositoryImpl @Inject constructor(
                 .document(userId)
                 .addSnapshotListener { value, error ->
                     if (error != null) {
-                        trySend(Resource.Error(error.message.toString()))
+                        trySend(Resource.Error(error))
                     }
                     val user = value?.toObject(User::class.java)
 
@@ -82,4 +84,8 @@ class UserRepositoryImpl @Inject constructor(
                 close()
             }
     }.flowOn(Dispatchers.IO)
+
+    override suspend fun logout() {
+        firebaseAuth.signOut()
+    }
 }

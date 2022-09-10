@@ -1,12 +1,13 @@
 package com.denisgithuku.softkeja.presentation.components.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,8 +30,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.denisgithuku.softkeja.domain.model.Home
 import com.denisgithuku.softkeja.domain.model.HomeCategory
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 import java.util.*
@@ -41,7 +41,7 @@ fun HomeUi(
     onOpenHome: (Home) -> Unit,
     homeViewModel: HomeViewModel = hiltViewModel(),
     sheetState: ModalBottomSheetState,
-    onNavigateToAbout: () -> Unit
+    onNavigateToProfile: (String) -> Unit
 ) {
     val uiState = homeViewModel.uiState.collectAsState().value
     val scope = rememberCoroutineScope()
@@ -56,6 +56,18 @@ fun HomeUi(
     val horizontalListState = rememberLazyListState()
     val verticalListState = rememberLazyListState()
 
+    if (uiState.userMessages.isNotEmpty()) {
+        for (userMessage in uiState.userMessages) {
+            LaunchedEffect(scaffoldState.snackbarHostState) {
+                scope.launch {
+                    scaffoldState.snackbarHostState.showSnackbar(
+                        userMessage.message?.localizedMessage ?: "Could not fetch data"
+                    )
+                }
+            }
+        }
+    }
+
     if (uiState.isLoading) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -65,53 +77,48 @@ fun HomeUi(
         }
     }
 
-    if (uiState.error.isNotEmpty()) {
-        LaunchedEffect(scaffoldState.snackbarHostState) {
-            scope.launch {
-                scaffoldState.snackbarHostState.showSnackbar(uiState.error)
-            }
-        }
-    }
-
-
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
+
         TopRowSection(
             modifier = Modifier,
             initial = uiState.user?.email.toString()[0]
                 .uppercase(Locale.getDefault()),
             onClickInitialBox = {
-                onNavigateToAbout()
+                onNavigateToProfile(uiState.user?.uid.toString())
             }
         )
 
         LazyRow(state = horizontalListState) {
-            items(uiState.categories) { category ->
-                HomeCategoryItem(
-                    category = category,
-                    isSelected = category.name == uiState.selectedCategory,
-                    onSelectCategory = {
-                        homeViewModel.onEvent(HomeUiEvent.FilterHomes(category.name))
-                    }
-                )
-                Divider()
+            uiState.categories.forEach { category ->
+                item(key = category.name) {
+                    HomeCategoryItem(
+                        category = category,
+                        isSelected = category.name == uiState.selectedCategory,
+                        onSelectCategory = {
+                            homeViewModel.onEvent(HomeUiEvent.FilterHomes(category.name))
+                        }
+                    )
+                }
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = uiState.selectedCategory, style = TextStyle(
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+        AnimatedVisibility(visible = uiState.homes.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = uiState.selectedCategory, style = TextStyle(
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                    )
                 )
-            )
+            }
         }
 
         if (uiState.homes.isEmpty()) {
@@ -132,13 +139,15 @@ fun HomeUi(
 
 
         LazyColumn(state = verticalListState) {
-            items(uiState.homes) { home ->
-                HomeItem(
-                    home = home,
-                    onSelectHome = {
-                        onOpenHome(it)
-                    }
-                )
+            uiState.homes.forEach { home ->
+                item(home.homeId) {
+                    HomeItem(
+                        home = home,
+                        onSelectHome = {
+                            onOpenHome(it)
+                        }
+                    )
+                }
             }
         }
     }
@@ -169,7 +178,7 @@ fun TopRowSection(
         )
         Box(
             modifier = modifier
-                .size(40.dp)
+                .sizeIn(minWidth = 40.dp, minHeight = 40.dp)
                 .background(
                     MaterialTheme.colors.primary,
                     RoundedCornerShape(14.dp),
@@ -189,7 +198,7 @@ fun TopRowSection(
 
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .sizeIn(8.dp)
                     .background(
                         color = Color.Green,
                         shape = CircleShape
@@ -211,7 +220,7 @@ fun HomeCategoryItem(
     onSelectCategory: (HomeCategory) -> Unit
 ) {
     val backgroundColor =
-        if (isSelected) MaterialTheme.colors.primary else MaterialTheme.colors.primary.copy(alpha = 0.3f)
+        if (isSelected) MaterialTheme.colors.primary else Color.White
     val contentColor =
         if (isSelected) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
     val animatedBg = animateColorAsState(targetValue = backgroundColor)
@@ -220,6 +229,11 @@ fun HomeCategoryItem(
         modifier = Modifier
             .wrapContentSize()
             .padding(10.dp)
+            .border(
+                width = 1.dp,
+                shape = CircleShape,
+                color = if (isSelected) Color.Transparent else MaterialTheme.colors.primary
+            )
             .background(
                 color = animatedBg.value,
                 shape = CircleShape
@@ -259,10 +273,9 @@ fun HomeItem(
             imageModel = home.imageUrl,
             modifier = Modifier
                 .clip(CircleShape)
-                .size(80.dp)
+                .sizeIn(maxWidth = 80.dp, maxHeight = 80.dp)
         )
         Column(
-            modifier = Modifier.padding(4.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -277,26 +290,26 @@ fun HomeItem(
                 style = TextStyle(
                     color = MaterialTheme.colors.onSurface,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                    fontWeight = FontWeight.SemiBold,
+                ), maxLines = 1, overflow = TextOverflow.Ellipsis
             )
         }
-        Row(horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = modifier
                     .wrapContentSize()
-                    .background(
-                        if (home.available)
-                            MaterialTheme.colors.primary.copy(alpha = 0.2f) else MaterialTheme.colors.secondary.copy(
-                            alpha = 0.2f
-                        ),
-                        RoundedCornerShape(12.dp)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colors.primary,
+                        CircleShape
                     )
             ) {
                 Text(
-                    modifier = Modifier.padding(4.dp),
+                    modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp),
                     text = if (home.available) "Available" else "Occupied",
                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
                 )
@@ -304,7 +317,7 @@ fun HomeItem(
             Icon(
                 imageVector = Icons.Default.ArrowForwardIos,
                 contentDescription = "Open Home",
-                tint = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
+                tint = MaterialTheme.colors.onSurface.copy(alpha = 0.8f)
             )
         }
     }
