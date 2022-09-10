@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "643979492992",
+    "project_id": "softkeja",
+    "storage_bucket": "softkeja.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:643979492992:android:179c1da3954141c1f87065",
+        "android_client_info": {
+          "package_name": "com.denisgithuku.softkeja"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "643979492992-m6lia7ln438q6tu03lp8c9hm2l3kv70l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.denisgithuku.softkeja",
+            "certificate_hash": "43fc1284e9c046159c86e0ecdcbffae3ae6ebf5f"
+          }
+        },
+        {
+          "client_id": "643979492992-4iqmie8c8beeirl4ll1b5qetv7f95r77.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCc6uVTd7KS39weBBnu9thVGK1tHRfhTMY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "643979492992-4iqmie8c8beeirl4ll1b5qetv7f95r77.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
