@@ -53,9 +53,6 @@ class HomeDetailsViewModel @Inject constructor(
                     )
                 } else {
                     bookMarkHome(_uiState.value.userId.toString(), event.home)
-                    _uiState.update {
-                        it.copy(hasBookmarked = true)
-                    }
                 }
             }
         }
@@ -77,6 +74,7 @@ class HomeDetailsViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
+                                hasBookmarked = true
                             )
                         }
                     }

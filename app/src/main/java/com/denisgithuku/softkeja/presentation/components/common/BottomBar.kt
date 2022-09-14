@@ -16,6 +16,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import com.denisgithuku.softkeja.presentation.navigation.BottomBarScreen
 import com.denisgithuku.softkeja.presentation.navigation.Screen
 
 @Composable
@@ -36,9 +37,8 @@ fun BottomBar(
             BottomBarItem(
                 screen = screen,
                 isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                onSelect = { destination ->
-                    onNavigate(destination)
-                })
+                onSelect = { onNavigate(screen) }
+            )
         }
     }
 }
@@ -48,11 +48,12 @@ fun BottomBarItem(
     modifier: Modifier = Modifier,
     screen: Screen,
     isSelected: Boolean,
-    onSelect: (Screen) -> Unit
+    onSelect: () -> Unit
 ) {
 
     val backgroundColor = if (isSelected) MaterialTheme.colors.primary else Color.White
-    val contentColor = if (isSelected) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
+    val contentColor =
+        if (isSelected) MaterialTheme.colors.onPrimary else MaterialTheme.colors.primary
     Box(
         modifier = modifier
             .padding(4.dp)
@@ -61,7 +62,7 @@ fun BottomBarItem(
     ) {
         Row(
             modifier = Modifier
-                .clickable(onClick = { onSelect(screen) })
+                .clickable(onClick =  onSelect )
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)

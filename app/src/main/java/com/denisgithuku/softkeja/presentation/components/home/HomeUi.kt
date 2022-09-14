@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -40,11 +41,15 @@ fun HomeUi(
     scaffoldState: ScaffoldState,
     onOpenHome: (Home) -> Unit,
     homeViewModel: HomeViewModel = hiltViewModel(),
-    sheetState: ModalBottomSheetState,
     onNavigateToProfile: (String) -> Unit
 ) {
     val uiState = homeViewModel.uiState.collectAsState().value
     val scope = rememberCoroutineScope()
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = BottomSheetState(
+            initialValue = BottomSheetValue.Collapsed
+        )
+    )
 
     val dialogProperties = DialogProperties(
         dismissOnBackPress = false,
@@ -151,8 +156,33 @@ fun HomeUi(
             }
         }
     }
-
 }
+
+@Composable
+fun LoadingSpinner() {
+
+    val boxes = (1..4).map {
+        Box(
+            modifier = Modifier
+                .sizeIn(maxWidth = 12.dp, maxHeight = 12.dp)
+                .background(
+                    color = MaterialTheme.colors.primary.copy(alpha = 0.3f),
+                    shape = CircleShape
+                )
+        )
+    }
+    for (i in 1..3) {
+        Box(
+            modifier = Modifier
+                .sizeIn(maxWidth = 12.dp, maxHeight = 12.dp)
+                .background(
+                    color = MaterialTheme.colors.primary.copy(alpha = 0.3f),
+                    shape = CircleShape
+                )
+        )
+    }
+}
+
 
 @ExperimentalMaterialApi
 @Composable
@@ -343,4 +373,10 @@ fun HomeCategoryPrev() {
         onSelectCategory = {},
         category = HomeCategory()
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoadingSpinnerPrev() {
+    LoadingSpinner()
 }

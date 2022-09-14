@@ -20,7 +20,10 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,11 +33,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 
@@ -46,8 +47,6 @@ fun HomeDetailsUi(
     homeDetailsViewModel: HomeDetailsViewModel = hiltViewModel()
 ) {
     val uiState = homeDetailsViewModel.uiState.collectAsState().value
-    val listState = rememberLazyListState()
-    val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current as Activity
 
@@ -103,25 +102,23 @@ fun HomeDetailsUi(
         }
     }
 
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    }
+
 
     Column(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            return@Column
-        }
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(350.dp)
         ) {
-
             GlideImage(
                 imageModel = uiState.home.imageUrl,
                 modifier = Modifier
@@ -162,8 +159,6 @@ fun HomeDetailsUi(
         Text(
             text = uiState.home.name,
             style = TextStyle(
-                color = Color.Black,
-                fontWeight = FontWeight.SemiBold,
                 fontSize = 20.sp
             )
         )
@@ -172,99 +167,72 @@ fun HomeDetailsUi(
         Text(
             text = "Category: ${uiState.home.category}",
             style = TextStyle(
-                color = Color.Black,
-                fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp
             )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
         Text(
-            text = if (uiState.home.available) "Available" else "Occupied",
+            text = "Features",
             style = TextStyle(
-                color = Color.Black,
-                fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp
             )
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-        Card(
-            modifier = Modifier
-                .sizeIn(minHeight = 300.dp)
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(20.dp),
-            elevation = 12.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(30.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly
+
+        uiState.home.features.forEach { feature ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = "Monthly rent: ${uiState.home.monthly_rent} Ksh",
-                    style = TextStyle(
-                        color = MaterialTheme.colors.onSurface,
-                        fontSize = 20.sp
-                    )
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .background(
+                            MaterialTheme.colors.primary.copy(
+                                alpha = 0.4f
+                            ),
+                            shape = CircleShape
+                        ),
                 )
                 Text(
-                    text = "Features",
-                    style = TextStyle(
-                        fontSize = 16.sp
-                    )
+                    text = feature,
+                    style = TextStyle(color = MaterialTheme.colors.primary)
                 )
-                Spacer(modifier = Modifier.height(10.dp))
-                LazyColumn(state = listState) {
-                    items(uiState.home.features) { feature ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .background(
-                                        MaterialTheme.colors.primary.copy(
-                                            alpha = 0.4f
-                                        ),
-                                        shape = CircleShape
-                                    ),
-                            )
-                            Text(
-                                text = feature,
-                                style = TextStyle(color = MaterialTheme.colors.primary)
-                            )
-                        }
-                    }
+            }
+        }
+        Text(
+            text = "Monthly rent: ${uiState.home.monthly_rent} Ksh",
+            style = TextStyle(
+                color = MaterialTheme.colors.onSurface,
+                fontSize = 20.sp
+            )
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(
+                shape = RoundedCornerShape(8.dp),
+                onClick = {
+                    callLauncher.launch(Manifest.permission.CALL_PHONE)
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Button(
-                        shape = RoundedCornerShape(8.dp),
-                        onClick = {
-                            callLauncher.launch(Manifest.permission.CALL_PHONE)
-                        }
-                    ) {
-                        Text(text = "Call owner")
-                    }
-                    Button(
-                        shape = RoundedCornerShape(8.dp),
-                        onClick = {
-                            mapsLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                        }
-                    ) {
-                        Text(text = "View on Map")
-                    }
+            ) {
+                Text(text = "Call owner")
+            }
+            Button(
+                shape = RoundedCornerShape(8.dp),
+                onClick = {
+                    mapsLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 }
+            ) {
+                Text(text = "View on Map")
             }
         }
     }

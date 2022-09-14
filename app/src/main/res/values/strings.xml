@@ -9,4 +9,34 @@
     <string name="password_requirement_digit">
         At least 1 digit
     </string>
+    <string name = "bookmarks_id">
+        Bookmarks
+    </string>
+    <string name = "profile_id">
+        Profile
+    </string>
+    <string name="details_id">
+        Details
+    </string>
+    <string name="home_id">
+        Home
+    </string>
+    <string name="about_id">
+        About
+    </string>
+    <string name="map_id">
+        Location
+    </string>
+    <string name="login_id">
+        Login
+    </string>
+    <string name="reset_password_id">
+        Reset password
+    </string>
+    <string name="signup_id">
+        Sign up
+    </string>
+    <string name= "splash_id">
+        Splash
+    </string>
 </resources>

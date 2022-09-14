@@ -1,12 +1,11 @@
 package com.denisgithuku.softkeja.presentation.navigation
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import com.denisgithuku.softkeja.presentation.components.about.AboutUi
 import com.denisgithuku.softkeja.presentation.components.bookmarks.BookMarksUi
 import com.denisgithuku.softkeja.presentation.components.details.HomeDetailsUi
@@ -17,8 +16,11 @@ import com.denisgithuku.softkeja.presentation.components.profile.ProfileUi
 import com.denisgithuku.softkeja.presentation.components.reset_password.ResetPasswordScreen
 import com.denisgithuku.softkeja.presentation.components.signup.SignUpScreen
 import com.denisgithuku.softkeja.presentation.components.splash.SplashUi
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
+@OptIn(ExperimentalAnimationApi::class)
 @ExperimentalMaterialApi
 @ExperimentalPermissionsApi
 @Composable
@@ -26,13 +28,20 @@ fun MainNavGraph(
     scaffoldState: ScaffoldState,
     navController: NavHostController,
     isLoggedIn: Boolean,
-    sheetState: ModalBottomSheetState
 ) {
-    NavHost(
+    AnimatedNavHost(
         navController = navController,
         startDestination = Screen.Splash.route
     ) {
-        composable(Screen.Splash.route) {
+        composable(
+            route = Screen.Splash.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(700)) + expandIn()
+            },
+            exitTransition = {
+                fadeOut() +  slideOutOfContainer(towards = AnimatedContentScope.SlideDirection.Start)
+            }
+        ) {
             SplashUi(onSplashScreenShow = {
                 if (isLoggedIn) {
                     navController.navigate(Screen.Home.route) {
@@ -51,7 +60,15 @@ fun MainNavGraph(
                 }
             })
         }
-        composable(route = Screen.Login.route) {
+        composable(
+            route = Screen.Login.route,
+            enterTransition = {
+                slideIntoContainer(AnimatedContentScope.SlideDirection.Start)
+            },
+            exitTransition = {
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.End)
+            }
+        ) {
             LoginScreen(scaffoldState = scaffoldState, onLoggedIn = {
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Login.route) {
@@ -74,7 +91,15 @@ fun MainNavGraph(
                     }
                 })
         }
-        composable(route = Screen.SignUp.route) {
+        composable(
+            route = Screen.SignUp.route,
+            enterTransition = {
+                slideIntoContainer(towards = AnimatedContentScope.SlideDirection.End)
+            },
+            exitTransition = {
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Start)
+            }
+        ) {
             SignUpScreen(scaffoldState = scaffoldState, onSignedUp = {
                 navController.navigate(Screen.Login.route) {
                     popUpTo(Screen.SignUp.route) {
@@ -83,7 +108,15 @@ fun MainNavGraph(
                 }
             })
         }
-        composable(Screen.Home.route) {
+        composable(
+            Screen.Home.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(700)) + expandIn()
+            },
+            exitTransition = {
+                fadeOut() + shrinkOut()
+            }
+        ) {
             HomeUi(
                 onOpenHome = { home ->
                     navController.navigate(Screen.Details.route + "/${home.homeId}") {
@@ -94,7 +127,6 @@ fun MainNavGraph(
                     }
                 },
                 scaffoldState = scaffoldState,
-                sheetState = sheetState,
                 onNavigateToProfile = { userId ->
                     navController.navigate(Screen.Profile.route + "/${userId}") {
                         popUpTo(Screen.Profile.route) {
@@ -105,13 +137,29 @@ fun MainNavGraph(
                 }
             )
         }
-        composable(Screen.ResetPassword.route) {
+        composable(
+            Screen.ResetPassword.route,
+            enterTransition = {
+                slideIntoContainer(AnimatedContentScope.SlideDirection.End, tween(700))
+            },
+            exitTransition = {
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Start, tween(700))
+            }
+        ) {
             ResetPasswordScreen(scaffoldState = scaffoldState, onResetPassword = {
                 navController.popBackStack()
             })
         }
 
-        composable(Screen.Details.route + "/{homeId}") {
+        composable(
+            Screen.Details.route + "/{homeId}",
+            enterTransition = {
+                fadeIn() + expandIn()
+            },
+            exitTransition = {
+                fadeOut() + shrinkOut()
+            }
+        ) {
             HomeDetailsUi(
                 scaffoldState = scaffoldState,
                 onViewOnMap = { latLng ->
@@ -126,7 +174,15 @@ fun MainNavGraph(
                 })
         }
 
-        composable(Screen.BookMarks.route) {
+        composable(
+            Screen.BookMarks.route,
+            enterTransition = {
+                slideIntoContainer(AnimatedContentScope.SlideDirection.End, tween(700))
+            },
+            exitTransition = {
+                slideOutOfContainer(AnimatedContentScope.SlideDirection.Start, tween(700))
+            }
+        ) {
             BookMarksUi(scaffoldState = scaffoldState, onOpenHome = { home ->
                 navController.navigate(Screen.Details.route + "/${home.homeId}") {
                     popUpTo(Screen.Details.route) {
@@ -149,11 +205,27 @@ fun MainNavGraph(
             )
         }
 
-        composable(Screen.Map.route + "/{latLng}") {
+        composable(
+            Screen.Map.route + "/{latLng}",
+            enterTransition = {
+                fadeIn(tween(700)) + slideIntoContainer(AnimatedContentScope.SlideDirection.Up)
+            },
+            exitTransition = {
+                fadeOut(tween(700)) + slideOutOfContainer(AnimatedContentScope.SlideDirection.Down)
+            }
+        ) {
             MapUi(scaffoldState = scaffoldState)
         }
 
-        composable(Screen.Profile.route + "/{userId}") {
+        composable(
+            Screen.Profile.route + "/{userId}",
+            enterTransition =  {
+                fadeIn() +  slideIntoContainer(AnimatedContentScope.SlideDirection.Up, tween(700))
+            },
+            exitTransition = {
+               fadeOut() +  slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, tween(700))
+            }
+        ) {
             ProfileUi(scaffoldState = scaffoldState, onSignOut = {
                 navController.navigate(Screen.Login.route) {
                     popUpTo(Screen.Profile.route) {

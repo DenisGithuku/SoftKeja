@@ -90,14 +90,16 @@ class HomeViewModel @Inject constructor(
                             }
                         }
                         is Resource.Success -> {
-                            result.data?.forEach {
-                                fetchHomeImageUrl(it.imageUrl)
-                            }
+
                             _uiState.update {
                                 it.copy(
                                     homes = result.data ?: listOf(),
                                     isLoading = false
                                 )
+                            }.also {
+                                result.data?.forEach {
+                                    fetchHomeImageUrl(it.imageUrl)
+                                }
                             }
                             Log.d("homes", result.data.toString())
 
@@ -130,6 +132,7 @@ class HomeViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(isLoading = false)
                         }
+
                         _uiState.value.homes.map {
                             it.imageUrl = result.data!!
                         }

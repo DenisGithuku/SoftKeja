@@ -9,12 +9,12 @@ plugins {
 }
 
 android {
-    compileSdk 31
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.denisgithuku.softkeja"
         minSdk 21
-        targetSdk 31
+        targetSdk 33
         versionCode 1
         versionName "1.0.0"
 
@@ -87,14 +87,14 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
     implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
 
-
     //accompanist
-    implementation "com.google.accompanist:accompanist-flowlayout:0.21.0-beta"
-    implementation "com.google.accompanist:accompanist-navigation-animation:0.21.0-beta"
+    implementation "com.google.accompanist:accompanist-flowlayout:0.26.3-beta"
+    implementation "com.google.accompanist:accompanist-navigation-animation:0.26.3-beta"
     implementation "com.google.accompanist:accompanist-insets:0.14.0"
     implementation "com.google.accompanist:accompanist-permissions:0.21.1-beta"
 
     implementation "com.google.accompanist:accompanist-pager:0.24.3-alpha"
+    implementation "com.google.accompanist:accompanist-systemuicontroller:0.23.1"
 
     // If using indicators, also depend on
     implementation "com.google.accompanist:accompanist-pager-indicators:0.24.3-alpha"
